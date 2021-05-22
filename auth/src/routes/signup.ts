@@ -1,10 +1,9 @@
 import express, { NextFunction, Request, Response } from "express";
-import { body, validationResult } from "express-validator";
+import { body } from "express-validator";
 import jwt from "jsonwebtoken";
 
 import { User } from "../model/user";
-import { RequestValidationError } from "../error/request-validation-error";
-import { DatabaseConnectionError } from "../error/database-connection-error";
+import { validateRequest } from "../middleware/request-validation-middleware";
 
 const router = express.Router();
 
@@ -17,12 +16,8 @@ router.post(
       .isLength({ min: 5 })
       .withMessage("Invalid Password"),
   ],
+  validateRequest,
   async (req: Request, res: Response, next: NextFunction) => {
-    const error = validationResult(req);
-    if (!error.isEmpty()) {
-      throw new RequestValidationError(error.array());
-    }
-
     const { email, password } = req.body;
 
     const alreadyUsed = await User.findOne({ email });
